@@ -23,7 +23,7 @@ export default function Card({
         placeholder="Card"
         type="text"
         value={text}
-        className="flex-1 p-1"
+        className="flex-1 p-1.5 border-slate-300 border rounded  focus:outline-blue-500 focus:outline-1 text-slate-600"
         onChange={onChange}
         onKeyUp={(event) => {
           event.key === "Enter" && onEnter ? onEnter(event) : undefined;
