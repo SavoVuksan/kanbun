@@ -1,0 +1,7 @@
+- [ ] Fix broken loading of card elements & switching of card-creator
+- [ ] Create component for card-creator
+- [ ] Change input to text field for multi line edits
+- [ ] Change input and non edit div of card to be the same height
+- [ ] Add possibility to create multiple boards
+- [ ] Add possibility to drag and drop boards
+- [ ] Add drag and drop for cards
