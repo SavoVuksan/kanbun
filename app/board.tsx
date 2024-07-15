@@ -7,9 +7,15 @@ type BoardProps = {
 
 export default function Board({ title }: BoardProps) {
   const [cards, setCards] = useState<Array<CardProps>>([
-    { id: 0, text: "test" },
-    { id: 1, text: "test2" },
-    { id: 2, text: "", isDeletable: false },
+    { id: 0, text: "test", isEditing: false },
+    { id: 1, text: "test2", isEditing: false },
+    {
+      id: 2,
+      text: "",
+      isDeletable: false,
+      isEditing: true,
+      permanentEdit: true,
+    },
   ]);
 
   function handleCardChange(
@@ -38,8 +44,34 @@ export default function Board({ title }: BoardProps) {
     const newCards = cards.slice();
     const newCard = createEmptyCard();
     resetCard!.isDeletable = true;
+    resetCard!.isEditing = false;
+    resetCard!.permanentEdit = false;
     newCards[resetCardIndex] = resetCard!;
     newCards.push(newCard);
+    setCards(newCards);
+  }
+
+  function onCardBlur(event: any, element: CardProps) {
+    const newCards = cards.slice();
+    const updateCard = newCards.find((card) => card.id === element.id);
+    updateCard!.isEditing = false;
+    const updateCardIndex = newCards.findIndex(
+      (card) => card.id === element.id
+    );
+    newCards[updateCardIndex] = updateCard!;
+
+    setCards(newCards);
+  }
+
+  function onCardClick(event: React.MouseEvent, element: CardProps) {
+    const newCards = cards.slice();
+    const updateCard = newCards.find((card) => card.id === element.id);
+    updateCard!.isEditing = true;
+    const updateCardIndex = newCards.findIndex(
+      (card) => card.id === element.id
+    );
+    newCards[updateCardIndex] = updateCard!;
+
     setCards(newCards);
   }
 
@@ -48,6 +80,8 @@ export default function Board({ title }: BoardProps) {
       id: constantCounter(),
       text: "",
       isDeletable: false,
+      isEditing: false,
+      permanentEdit: true,
     };
   }
 
@@ -62,8 +96,16 @@ export default function Board({ title }: BoardProps) {
             text={element.text}
             onChange={(event) => handleCardChange(event, element)}
             onDelete={(event) => handleCardDelete(event, element)}
-            onEnter={(event) => handleCardCreate(event, element)}
+            onEnter={(event) =>
+              element.permanentEdit
+                ? handleCardCreate(event, element)
+                : onCardBlur(event, element)
+            }
             isDeletable={element.isDeletable}
+            isEditing={element.isEditing}
+            onBlur={(event) => onCardBlur(event, element)}
+            onClick={(event) => onCardClick(event, element)}
+            permanentEdit={element.permanentEdit}
           ></Card>
         );
       })}

@@ -1,5 +1,5 @@
 import FeatherIcon from "feather-icons-react";
-import React, { ChangeEventHandler } from "react";
+import React, { ChangeEventHandler, useState } from "react";
 
 export type CardProps = {
   id: number;
@@ -8,6 +8,10 @@ export type CardProps = {
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onDelete?: React.MouseEventHandler<HTMLButtonElement>;
   onEnter?: React.KeyboardEventHandler<HTMLInputElement>;
+  isEditing: boolean;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  permanentEdit?: boolean;
 };
 
 export default function Card({
@@ -16,10 +20,15 @@ export default function Card({
   onChange,
   onDelete,
   onEnter,
+  isEditing,
+  onBlur,
+  onClick,
+  permanentEdit,
 }: CardProps) {
-  return (
-    <div className="flex flex-row gap-2 items-center">
+  function getInput() {
+    return (
       <input
+        autoFocus={true}
         placeholder="Card"
         type="text"
         value={text}
@@ -28,7 +37,25 @@ export default function Card({
         onKeyUp={(event) => {
           event.key === "Enter" && onEnter ? onEnter(event) : undefined;
         }}
+        onBlur={onBlur}
       />
+    );
+  }
+
+  return (
+    <div className="flex flex-row gap-2 items-center">
+      {!permanentEdit ? (
+        isEditing ? (
+          getInput()
+        ) : (
+          <div className="flex flex-1 cursor-pointer" onClick={onClick}>
+            {text}
+          </div>
+        )
+      ) : (
+        getInput()
+      )}
+
       <button
         onClick={onDelete}
         hidden={isDeletable === undefined ? false : !isDeletable}
