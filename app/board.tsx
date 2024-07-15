@@ -6,73 +6,92 @@ type BoardProps = {
 };
 
 export default function Board({ title }: BoardProps) {
-  const [cards, setCards] = useState<Array<CardProps>>([
-    { id: 0, text: "test", isEditing: false },
-    { id: 1, text: "test2", isEditing: false },
-    {
-      id: 2,
-      text: "",
-      isDeletable: false,
-      isEditing: true,
-      permanentEdit: true,
-    },
-  ]);
+  const [cards, setCards] = useState<Map<number, CardProps>>(
+    new Map<number, CardProps>([
+      [0, { id: 0, text: "test", isEditing: false } as CardProps],
+      [1, { id: 1, text: "test2", isEditing: false } as CardProps],
+      [
+        2,
+        {
+          id: 2,
+          text: "",
+          isDeletable: false,
+          isEditing: true,
+          permanentEdit: true,
+        } as CardProps,
+      ],
+    ])
+  );
 
   function handleCardChange(
     event: React.ChangeEvent<HTMLInputElement>,
     card: CardProps
   ) {
-    const index = cards.findIndex((element) => element.id === card.id);
-    const newCards = cards.slice();
-    newCards[index] = { ...card, text: event.target.value };
-    setCards(newCards);
+    const newCard = cards.get(card.id);
+    if (!newCard) {
+      throw `Couldn't find card with id ${card.id}`;
+    } else {
+      newCard.text = event.target.value;
+      const newCards = new Map(cards);
+      newCards.set(newCard.id, newCard);
+      setCards(newCards);
+    }
   }
 
   function handleCardDelete(
     event: React.MouseEvent<HTMLButtonElement>,
     card: CardProps
   ) {
-    setCards(cards.slice().filter((element) => element.id !== card.id));
+    // setCards(cards.slice().filter((element) => element.id !== card.id));
+    const newCards = new Map(cards);
+    newCards.delete(card.id);
+    setCards(newCards);
   }
 
   function handleCardCreate(
     event: React.KeyboardEvent<HTMLInputElement>,
     card: CardProps
   ) {
-    const resetCard = cards.find((element) => element.id === card.id);
-    const resetCardIndex = cards.findIndex((element) => element.id === card.id);
-    const newCards = cards.slice();
-    const newCard = createEmptyCard();
-    resetCard!.isDeletable = true;
-    resetCard!.isEditing = false;
-    resetCard!.permanentEdit = false;
-    newCards[resetCardIndex] = resetCard!;
-    newCards.push(newCard);
-    setCards(newCards);
+    const resetCard = cards.get(card.id);
+    if (!resetCard) {
+      throw `Couldn't find card with id: ${card.id}`;
+    } else {
+      const newCards = new Map(cards);
+      const newCard = createEmptyCard();
+
+      resetCard.isDeletable = true;
+      resetCard.isEditing = false;
+      resetCard.permanentEdit = false;
+      newCards.set(resetCard.id, resetCard);
+      newCards.set(newCard.id, newCard);
+      setCards(newCards);
+    }
   }
 
   function onCardBlur(event: any, element: CardProps) {
-    const newCards = cards.slice();
-    const updateCard = newCards.find((card) => card.id === element.id);
-    updateCard!.isEditing = false;
-    const updateCardIndex = newCards.findIndex(
-      (card) => card.id === element.id
-    );
-    newCards[updateCardIndex] = updateCard!;
+    const updateCard = cards.get(element.id);
+    if (!updateCard) {
+      throw `Couldn't find card with id: ${element.id}`;
+    } else {
+      const newCards = new Map(cards);
 
-    setCards(newCards);
+      updateCard.isEditing = false;
+      newCards.set(updateCard.id, updateCard);
+      setCards(newCards);
+    }
   }
 
   function onCardClick(event: React.MouseEvent, element: CardProps) {
-    const newCards = cards.slice();
-    const updateCard = newCards.find((card) => card.id === element.id);
-    updateCard!.isEditing = true;
-    const updateCardIndex = newCards.findIndex(
-      (card) => card.id === element.id
-    );
-    newCards[updateCardIndex] = updateCard!;
+    const updateCard = cards.get(element.id);
+    if (!updateCard) {
+      throw `Could not find card with id: ${element.id}`;
+    } else {
+      updateCard.isEditing = true;
+      const newCards = new Map(cards);
+      newCards.set(updateCard.id, updateCard);
 
-    setCards(newCards);
+      setCards(newCards);
+    }
   }
 
   function createEmptyCard(): CardProps {
@@ -88,7 +107,7 @@ export default function Board({ title }: BoardProps) {
   return (
     <div className="rounded p-4 shadow m-4 max-w-sm flex gap-4 flex-col">
       <h1 className="text-xl text-blue-500">{title}</h1>
-      {cards.map((element, index) => {
+      {Array.from(cards).map(([id, element], index) => {
         return (
           <Card
             id={element.id}
