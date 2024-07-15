@@ -6,22 +6,24 @@ type BoardProps = {
 };
 
 export default function Board({ title }: BoardProps) {
-  const [cards, setCards] = useState<Map<number, CardProps>>(
-    new Map<number, CardProps>([
-      [0, { id: 0, text: "test", isEditing: false } as CardProps],
-      [1, { id: 1, text: "test2", isEditing: false } as CardProps],
-      [
-        2,
-        {
-          id: 2,
-          text: "",
-          isDeletable: false,
-          isEditing: true,
-          permanentEdit: true,
-        } as CardProps,
-      ],
-    ])
-  );
+  const [cards, setCards] = useState<Map<number, CardProps>>(() => {
+    const cards = new Map<number, CardProps>(
+      loadCards(1) === null
+        ? [
+            [0, { id: 0, text: "test", isEditing: false } as CardProps],
+            [1, { id: 1, text: "test2", isEditing: false } as CardProps],
+          ]
+        : JSON.parse(loadCards(1)!)
+    );
+    cards.set(-1, {
+      id: -1,
+      text: "",
+      isDeletable: false,
+      isEditing: true,
+      permanentEdit: true,
+    } as CardProps);
+    return cards;
+  });
 
   function handleCardChange(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -34,6 +36,7 @@ export default function Board({ title }: BoardProps) {
       newCard.text = event.target.value;
       const newCards = new Map(cards);
       newCards.set(newCard.id, newCard);
+      saveCards(1, newCards);
       setCards(newCards);
     }
   }
@@ -45,6 +48,7 @@ export default function Board({ title }: BoardProps) {
     // setCards(cards.slice().filter((element) => element.id !== card.id));
     const newCards = new Map(cards);
     newCards.delete(card.id);
+    saveCards(1, newCards);
     setCards(newCards);
   }
 
@@ -64,6 +68,7 @@ export default function Board({ title }: BoardProps) {
       resetCard.permanentEdit = false;
       newCards.set(resetCard.id, resetCard);
       newCards.set(newCard.id, newCard);
+      saveCards(1, newCards);
       setCards(newCards);
     }
   }
@@ -77,6 +82,7 @@ export default function Board({ title }: BoardProps) {
 
       updateCard.isEditing = false;
       newCards.set(updateCard.id, updateCard);
+      saveCards(1, newCards);
       setCards(newCards);
     }
   }
@@ -89,7 +95,7 @@ export default function Board({ title }: BoardProps) {
       updateCard.isEditing = true;
       const newCards = new Map(cards);
       newCards.set(updateCard.id, updateCard);
-
+      saveCards(1, newCards);
       setCards(newCards);
     }
   }
@@ -102,6 +108,17 @@ export default function Board({ title }: BoardProps) {
       isEditing: false,
       permanentEdit: true,
     };
+  }
+
+  function saveCards(boardId: number, cards: Map<number, CardProps>) {
+    const savedCards = Array.from(cards).filter(
+      ([index, card]) => card.permanentEdit === undefined || !card.permanentEdit
+    );
+    localStorage.setItem(boardId.toString(), JSON.stringify(savedCards));
+  }
+
+  function loadCards(boardId: number) {
+    return localStorage.getItem(boardId.toString());
   }
 
   return (
