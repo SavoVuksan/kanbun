@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useState } from "react";
 import Card, { CardProps } from "./card";
+import CardCreator from "./card-creator";
 
 type BoardProps = {
   title: string;
@@ -15,13 +16,6 @@ export default function Board({ title }: BoardProps) {
           ]
         : JSON.parse(loadCards(1)!)
     );
-    cards.set(-1, {
-      id: -1,
-      text: "",
-      isDeletable: false,
-      isEditing: true,
-      permanentEdit: true,
-    } as CardProps);
     return cards;
   });
 
@@ -53,24 +47,15 @@ export default function Board({ title }: BoardProps) {
   }
 
   function handleCardCreate(
-    event: React.KeyboardEvent<HTMLInputElement>,
-    card: CardProps
+   text: string
   ) {
-    const resetCard = cards.get(card.id);
-    if (!resetCard) {
-      throw `Couldn't find card with id: ${card.id}`;
-    } else {
       const newCards = new Map(cards);
       const newCard = createEmptyCard();
+      newCard.text = text;
 
-      resetCard.isDeletable = true;
-      resetCard.isEditing = false;
-      resetCard.permanentEdit = false;
-      newCards.set(resetCard.id, resetCard);
       newCards.set(newCard.id, newCard);
       saveCards(1, newCards);
       setCards(newCards);
-    }
   }
 
   function onCardBlur(event: any, element: CardProps) {
@@ -104,9 +89,9 @@ export default function Board({ title }: BoardProps) {
     return {
       id: constantCounter(),
       text: "",
-      isDeletable: false,
+      isDeletable: true,
       isEditing: false,
-      permanentEdit: true,
+      permanentEdit: false,
     };
   }
 
@@ -132,11 +117,11 @@ export default function Board({ title }: BoardProps) {
             text={element.text}
             onChange={(event) => handleCardChange(event, element)}
             onDelete={(event) => handleCardDelete(event, element)}
-            onEnter={(event) =>
-              element.permanentEdit
-                ? handleCardCreate(event, element)
-                : onCardBlur(event, element)
-            }
+            // onEnter={(event) =>
+            //   element.permanentEdit
+            //     ? handleCardCreate(event, element)
+            //     : onCardBlur(event, element)
+            // }
             isDeletable={element.isDeletable}
             isEditing={element.isEditing}
             onBlur={(event) => onCardBlur(event, element)}
@@ -145,11 +130,19 @@ export default function Board({ title }: BoardProps) {
           ></Card>
         );
       })}
+      <CardCreator onSubmit={(text) => handleCardCreate(text)}></CardCreator>
     </div>
   );
 }
 let counter = 3;
+let loaded = false;
 function constantCounter() {
+  if(!loaded){
+    const c = localStorage.getItem("counter");
+    counter = parseInt(c ? c : "3");
+    loaded = true;
+  }
   counter++;
+  localStorage.setItem("counter", counter.toString());
   return counter - 1;
 }
